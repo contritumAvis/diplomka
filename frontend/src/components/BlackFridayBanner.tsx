@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from "react";
+import Link from 'next/link';
 
 const BlackFridayBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
@@ -16,9 +17,11 @@ const BlackFridayBanner = () => {
               <div>
                 <img src="/discount.svg" alt="Баннер со скидкой" className="w-full max-w-[200px] mx-auto" />
               </div>
+              <Link href="/some-non-existent-page">
               <div>
                 <img src="/shopNowBF.svg" alt="Кнопка «Купить сейчас»" className="w-auto max-w-[150px]" />
               </div>
+              </Link>
             </div>
          </div>
          <button
