@@ -10,3 +10,16 @@ router.post('/register', registerUser)
 
 
 export default router
+
+// import express from "express";
+// import { registerUser, loginUser, refreshToken, me } from "../controllers/user.controller";
+// import { authMiddleware } from "../middlewares/auth";
+
+// const router = express.Router();
+
+// router.post("/register", registerUser); // public
+// router.post("/login", loginUser);       // public
+// router.post("/refresh", refreshToken);  // public
+// router.get("/me", authMiddleware, me);  // protected
+
+// export default router;
