@@ -74,11 +74,20 @@
 //     process.exit(1);
 //   });
 
+
 import { PrismaClient } from "@prisma/client";
+import slugify from "slugify";
+
 const prisma = new PrismaClient();
 
 async function main() {
-  // --- Категории с брендами ---
+  console.log("🌱 Сидинг данных...");
+
+  // Чистим старые записи (сначала продукты, потом связи, потом бренды и категории)
+  await prisma.product.deleteMany();
+  await prisma.category.deleteMany();
+  await prisma.brand.deleteMany();
+
   const categories = [
     {
       name: "Computer & Laptop",
@@ -127,31 +136,58 @@ async function main() {
   ];
 
   for (const category of categories) {
-    // Создаём категорию (если её нет)
-    const createdCategory = await prisma.category.upsert({
-      where: { name: category.name },
-      update: {},
-      create: { name: category.name },
+    const categorySlug = slugify(category.name, { lower: true, strict: true });
+
+    // Создаем категорию
+    const createdCategory = await prisma.category.create({
+      data: {
+        name: category.name,
+        slug: categorySlug,
+      },
     });
 
-    // Создаём бренды (если их ещё нет)
+    // Для каждой категории — бренды
     for (const brandName of category.brands) {
-      await prisma.brand.upsert({
-        where: { name: brandName },
-        update: {},
-        create: { name: brandName },
+      const brandSlug = slugify(brandName, { lower: true, strict: true });
+
+      // Либо создаем бренд, либо находим (если он уже есть)
+      let brand = await prisma.brand.findUnique({
+        where: { slug: brandSlug },
       });
+
+      if (!brand) {
+        brand = await prisma.brand.create({
+          data: {
+            name: brandName,
+            slug: brandSlug,
+          },
+        });
+      }
+
+      // Связываем бренд с категорией
+      await prisma.category.update({
+  where: { id: createdCategory.id },
+  data: {
+    brands: {
+      connect: [{ id: brand.id }], // ✅ массив
+    },
+  },
+});
+
     }
+
+    console.log(`✅ Создана категория: ${createdCategory.name} (${createdCategory.slug})`);
   }
+
+  console.log("🎉 Сид завершён!");
 }
 
 main()
   .then(async () => {
-    console.log("✅ Seed успешно выполнен");
     await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error("❌ Ошибка в seed:", e);
+    console.error("❌ Ошибка в сидинге:", e);
     await prisma.$disconnect();
     process.exit(1);
   });

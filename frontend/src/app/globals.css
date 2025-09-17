@@ -3,6 +3,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --color-primary: #1E293B; /* тёмный синий */
+  --color-secondary: #475569; /* серый */
+  --color-accent: #3B82F6; /* синий */
+  --color-background: #F8FAFC; /* фон */
+  --color-text: #0F172A; /* текст */
+}
+.container-gutter {
+  @apply max-w-[1440px] mx-auto px-4 md:px-24 lg:px-28;
 }
 
 @theme inline {
@@ -27,3 +35,4 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+

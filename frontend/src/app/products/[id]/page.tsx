@@ -136,89 +136,9 @@
 //     </div>
 //   );
 // }
-
-import React from "react";
-import ProductCard from "@/components/ProductCard";
-
-type Product = {
-  id: number;
-  name: string;
-  description?: string;
-  basePrice: number;
-  thumbnail?: string;
-  images?: { url: string }[];
-  brand?: { name: string };
-  category?: { name: string };
-};
-
-async function getProduct(id: string): Promise<Product> {
-  const res = await fetch(`http://localhost:5000/api/products/${id}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error("Failed to fetch product");
-  return res.json();
-}
-
-async function getRecommended(category?: string): Promise<Product[]> {
-  if (!category) return [];
-  const res = await fetch(`http://localhost:5000/api/products?category=${category}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
-  return res.json();
-}
-
-export default async function ProductPage({ params }: { params: { id: string } }) {
-  const product = await getProduct(params.id);
-  const recommended = await getRecommended(product.category?.name);
-
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="grid grid-cols-2 gap-6">
-        {/* Картинка */}
-        <img
-          src={product.thumbnail ?? "https://via.placeholder.com/400"}
-          alt={product.name}
-          className="w-full h-auto rounded-xl shadow-md"
-        />
-
-        {/* Инфо о товаре */}
-        <div>
-          <h1 className="text-3xl font-bold">{product.name}</h1>
-          <p className="text-gray-600 mt-2">{product.description}</p>
-          <p className="text-xl font-semibold mt-4">{product.basePrice} ₸</p>
-          <button className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            Добавить в корзину
-          </button>
-        </div>
-      </div>
-
-      {/* Рекомендации */}
-      {recommended.length > 0 && (
-        <div className="mt-12">
-          <h2 className="text-xl font-bold mb-4">Похожие товары</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {recommended.map((p) => (
-              <ProductCard key={p.id} product={p} variant="horizontal" />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// "use client";
-// import React, { useEffect, useState } from "react";
-// import { useParams } from "next/navigation";
-// import axios from "axios";
-
-// type Variant = {
-//   id: number;
-//   color?: string;
-//   storage?: string;
-//   price?: number;
-// };
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// import React from "react";
+// import ProductCard from "@/components/ProductCard";
 
 // type Product = {
 //   id: number;
@@ -226,41 +146,416 @@ export default async function ProductPage({ params }: { params: { id: string } }
 //   description?: string;
 //   basePrice: number;
 //   thumbnail?: string;
+//   images?: { url: string }[];
 //   brand?: { name: string };
 //   category?: { name: string };
-//   variants?: Variant[];
 // };
 
-// export default function ProductPage() {
-//   const { id } = useParams();
-//   const [product, setProduct] = useState<Product | null>(null);
+// async function getProduct(id: string): Promise<Product> {
+//   const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+//     cache: "no-store",
+//   });
+//   if (!res.ok) throw new Error("Failed to fetch product");
+//   return res.json();
+// }
 
-//   useEffect(() => {
-//     axios.get(`http://localhost:5000/api/products/${id}`)
-//       .then(res => setProduct(res.data))
-//       .catch(err => console.error(err));
-//   }, [id]);
+// async function getRecommended(category?: string): Promise<Product[]> {
+//   if (!category) return [];
+//   const res = await fetch(`http://localhost:5000/api/products?category=${category}`, {
+//     cache: "no-store",
+//   });
+//   if (!res.ok) return [];
+//   return res.json();
+// }
 
-//   if (!product) return <p>Загрузка...</p>;
+// export default async function ProductPage({ params }: { params: { id: string } }) {
+//   const product = await getProduct(params.id);
+//   const recommended = await getRecommended(product.category?.name);
 
 //   return (
-//     <div className="p-6">
-//       <h1 className="text-2xl font-bold">{product.name}</h1>
-//       <p>{product.description}</p>
-//       <p>Цена: {product.basePrice} ₸</p>
+//     <div className="max-w-4xl mx-auto p-6">
+//       <div className="grid grid-cols-2 gap-6">
+//         {/* Картинка */}
+//         <img
+//           src={product.thumbnail ?? "https://via.placeholder.com/400"}
+//           alt={product.name}
+//           className="w-full h-auto rounded-xl shadow-md"
+//         />
 
-//       {product.variants && product.variants.length > 0 && (
-//         <div className="mt-4">
-//           <h3 className="font-semibold">Варианты:</h3>
-//           <ul>
-//             {product.variants.map(v => (
-//               <li key={v.id}>
-//                 {v.color} {v.storage && `- ${v.storage}`} — {v.price ?? product.basePrice} ₸
-//               </li>
+//         {/* Инфо о товаре */}
+//         <div>
+//           <h1 className="text-3xl font-bold">{product.name}</h1>
+//           <p className="text-gray-600 mt-2">{product.description}</p>
+//           <p className="text-xl font-semibold mt-4">{product.basePrice} ₸</p>
+//           <button className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+//             Добавить в корзину
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Рекомендации */}
+//       {recommended.length > 0 && (
+//         <div className="mt-12">
+//           <h2 className="text-xl font-bold mb-4">Похожие товары</h2>
+//           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//             {recommended.map((p) => (
+//               <ProductCard key={p.id} product={p} variant="horizontal" />
 //             ))}
-//           </ul>
+//           </div>
 //         </div>
 //       )}
 //     </div>
 //   );
 // }
+
+// import React from "react";
+// import { notFound } from "next/navigation";
+// import Breadcrumbs from "@/components/Breadcrumbs";
+// import ProductGallery from "@/components/product/ProductGallery";
+// import ProductInfo from "@/components/product/ProductInfo";
+// import TopHeader from "@/components/header/Header";
+// import BottomHeader from "@/components/header/BottomHeader";
+
+// type Product = {
+//   id: number;
+//   name: string;
+//   description?: string;
+//   price: number;
+//   imageUrl?: string;
+//   images?: string[]; // добавим массив
+//   brand?: { name: string };
+//   category?: { name: string };
+// };
+
+// async function getProduct(id: string): Promise<Product | null> {
+//   try {
+//     const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+//       cache: "no-store",
+//     });
+//     if (!res.ok) return null;
+//     return res.json();
+//   } catch (err) {
+//     console.error("Ошибка загрузки продукта:", err);
+//     return null;
+//   }
+// }
+
+// export default async function ProductPage({ params }: { params: { id: string } }) {
+//   const product = await getProduct(params.id);
+
+//   if (!product) return notFound();
+
+//   return (
+//     <>
+//       {/* Хэдер теперь сверху */}
+//       <TopHeader />
+//       <BottomHeader />
+
+//       <section className="max-w-[1440px] mx-auto px-4 md:px-24 lg:px-28 py-10">
+//         <Breadcrumbs
+//           items={[
+//             { label: "Главная", href: "/" },
+//             { label: product.category?.name || "Категория", href: "/products" },
+//             { label: product.name, href: `/products/${product.id}` },
+//           ]}
+//         />
+
+//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-8">
+//           <ProductGallery
+//             images={
+//               product.images && product.images.length > 0
+//                 ? product.images
+//                 : [product.imageUrl || "/placeholder.png"]
+//             }
+//           />
+//           <ProductInfo product={product} />
+//         </div>
+//       </section>
+//     </>
+//   );
+// }
+
+
+
+
+
+// import React from "react";
+// import { notFound } from "next/navigation";
+// import Breadcrumbs from "@/components/Breadcrumbs";
+// import ProductGallery from "@/components/product/ProductGallery";
+// import ProductInfo from "@/components/product/ProductInfo";
+// import TopHeader from "@/components/header/Header";
+// import BottomHeader from "@/components/header/BottomHeader";
+
+// type Product = {
+//   id: number;
+//   name: string;
+//   description?: string;
+//   price: number;
+//   imageUrl?: string;
+//   images?: { url: string }[];
+//   brand?: { name: string };
+//   category?: { name: string };
+// };
+
+// async function getProduct(id: string): Promise<Product | null> {
+//   try {
+//     const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+//       cache: "no-store",
+//     });
+//     if (!res.ok) return null;
+//     return res.json();
+//   } catch (err) {
+//     console.error("Ошибка загрузки продукта:", err);
+//     return null;
+//   }
+// }
+
+// export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
+//   const { id } = await props.params;
+//   const product = await getProduct(id);
+
+//   if (!product) return notFound();
+
+//   return (
+//     <>
+//       <TopHeader />
+//       <BottomHeader />
+
+//       {/* ✅ структура контейнера совпадает с хэдером */}
+//      <section className="w-full bg-gray-50">
+//   <div className="max-w-[1440px] mx-auto px-4 md:px-24 lg:px-28 py-3">
+//     <Breadcrumbs
+//       items={[
+//         { label: "Главная", href: "/" },
+//         { label: product.category?.name || "Категория", href: "/products" },
+//         { label: product.name, href: `/products/${product.id}` },
+//       ]}
+//     />
+//   </div>
+// </section>
+
+// {/* Контент продукта */}
+// <section className="max-w-[1440px] mx-auto px-4 md:px-24 lg:px-28 py-10">
+//   <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-8">
+//     <ProductGallery
+//       images={
+//         product.images && product.images.length > 0
+//           ? product.images.map((img) => img.url)
+//           : [product.imageUrl || "/placeholder.png"]
+//       }
+//     />
+//     <ProductInfo product={product} />
+//   </div>
+// </section>
+//     </>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// frontend/src/app/products/[id]/page.tsx
+// import React from "react";
+// import { notFound } from "next/navigation";
+// import Breadcrumbs from "@/components/Breadcrumbs";
+// import ProductGallery from "@/components/product/ProductGallery";
+// import ProductInfo from "@/components/product/ProductInfo";
+// import TopHeader from "@/components/header/Header";
+// import BottomHeader from "@/components/header/BottomHeader";
+
+// type Product = {
+//   id: number;
+//   name: string;
+//   description?: string;
+//   price: number;
+//   imageUrl?: string;
+//   images?: { url: string }[]; // from backend
+//   brand?: { name: string };
+//   category?: { name: string };
+// };
+
+// async function getProduct(id: string): Promise<Product | null> {
+//   try {
+//     const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+//       cache: "no-store",
+//     });
+//     if (!res.ok) return null;
+//     return res.json();
+//   } catch (err) {
+//     console.error("Ошибка загрузки продукта:", err);
+//     return null;
+//   }
+// }
+
+// // Server component (uses client headers/components inside)
+// export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
+//   const { id } = await props.params;
+//   const product = await getProduct(id);
+
+//   if (!product) return notFound();
+
+//   // нормализуем картинки в массив строк (вдруг backend возвращает [{url:..}])
+//   const imageUrls: string[] =
+//     product.images && product.images.length > 0
+//       ? product.images.map((i) => (typeof i === "string" ? i : (i as any).url).toString())
+//       : product.imageUrl
+//       ? [product.imageUrl]
+//       : [];
+
+//   return (
+//     <>
+//       <TopHeader />
+//       <BottomHeader />
+
+//       {/* Breadcrumbs as full-width light bar (like header) */}
+//       <section className="w-full bg-gray-50">
+//         <div className="max-w-[1440px] mx-auto px-4 md:px-24 lg:px-28 py-3">
+//           <Breadcrumbs
+//             items={[
+//               { label: "Главная", href: "/" },
+//               { label: product.category?.name || "Категория", href: "/products" },
+//               { label: product.name, href: `/products/${product.id}` },
+//             ]}
+//           />
+//         </div>
+//       </section>
+
+//       {/* Product content — SAME gutters as header, responsive */}
+//       <section className="w-full">
+//         <div className="max-w-[1440px] mx-auto px-4 md:px-24 lg:px-28 py-10">
+//           {/* Use flex so left panel (gallery) can be fixed width on lg but fluid on small screens */}
+//           <div className="flex flex-col lg:flex-row gap-8 lg:gap-[56px]">
+//             {/* LEFT: gallery — on lg fixed-ish, on small full width */}
+//             <div className="w-full lg:w-[616px] flex-shrink-0">
+//               <ProductGallery
+//                 images={
+//                   imageUrls.length > 0 ? imageUrls : [product.imageUrl || "/placeholder.png"]
+//                 }
+//               />
+//             </div>
+
+//             {/* RIGHT: info — takes remaining space */}
+//             <div className="w-full flex-1">
+//               <ProductInfo product={product} />
+//             </div>
+//           </div>
+//         </div>
+//       </section>
+//     </>
+//   );
+// }
+
+
+// frontend/src/app/products/[id]/page.tsx
+import React from "react";
+import { notFound } from "next/navigation";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import ProductGallery from "@/components/product/ProductGallery";
+import ProductInfo from "@/components/product/ProductInfo";
+import TopHeader from "@/components/header/Header";
+import BottomHeader from "@/components/header/BottomHeader";
+import ProductInfoBlock from "@/components/ProductInfoBlock"
+import ProductRecommendationSection from "@/components/ProductRecommendationSection";
+import Footer from "@/components/Footer";
+
+type Product = {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  imageUrl?: string;
+  images?: { url: string }[];
+  brand?: { name: string };
+  category?: { name: string };
+};
+
+async function getProduct(id: string): Promise<Product | null> {
+  try {
+    const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch (err) {
+    console.error("Ошибка загрузки продукта:", err);
+    return null;
+  }
+}
+
+export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+  const product = await getProduct(id);
+
+  if (!product) return notFound();
+
+  // нормализуем массив картинок
+  const imageUrls: string[] =
+    product.images && product.images.length > 0
+      ? product.images.map((i) => (typeof i === "string" ? i : (i as any).url).toString())
+      : product.imageUrl
+      ? [product.imageUrl]
+      : [];
+
+  return (
+    <>
+      <TopHeader />
+            <BottomHeader />
+
+      {/* Breadcrumbs как у хедера */}
+     <section className="px-4 md:px-24 lg:px-28">
+  <div className="max-w-[1440px] mx-auto">
+          <Breadcrumbs
+            items={[
+              { label: "Главная", href: "/" },
+              { label: product.category?.name || "Категория", href: "/products" },
+              { label: product.name, href: `/products/${product.id}` },
+            ]}
+          />
+        </div>
+      
+            
+      {/* Контент продукта */}
+      <section className="max-w-[1440px] mx-auto">
+        <div className="container-gutter py-10">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-[56px]">
+            {/* Левая часть: галерея */}
+            <div className="max-w-[1440px] mx-auto lg:w-[616px] flex-shrink-0">
+              <ProductGallery
+                images={
+                  imageUrls.length > 0 ? imageUrls : [product.imageUrl || "/placeholder.png"]
+                }
+              />
+            </div>
+
+            {/* Правая часть: инфо */}
+            <div className="w-full flex-1">
+              <ProductInfo product={product} />
+            </div>
+          </div>
+        </div>
+      </section>
+      <ProductInfoBlock product={product} />
+      
+      </section>
+      
+      <ProductRecommendationSection currentProduct={product as any} products={[]} />
+      < Footer />
+
+      
+    </>
+  );
+}
+

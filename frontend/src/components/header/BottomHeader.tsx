@@ -134,12 +134,19 @@ export default function BottomHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const categories = [
-    { name: "Electronics", href: "/category/electronics" },
-    { name: "Clothing", href: "/category/clothing" },
-    { name: "Home & Kitchen", href: "/category/home-kitchen" },
-    { name: "Books", href: "/category/books" },
-    { name: "Toys", href: "/category/toys" },
-  ];
+  { id: 3, name: "Computer & Laptop", href: "/category/computer-and-laptop" },
+  { id: 4, name: "Computer Accessories", href: "/category/computer-accessories" },
+  { id: 5, name: "SmartPhone", href: "/category/smartphone" },
+  { id: 6, name: "Headphone", href: "/category/headphone" },
+  { id: 7, name: "Mobile Accessories", href: "/category/mobile-accessories" },
+  { id: 8, name: "Gaming Console", href: "/category/gaming-console" },
+  { id: 9, name: "Camera & Photo", href: "/category/camera-and-photo" },
+  { id: 10, name: "TV & Homes Appliances", href: "/category/tv-and-homes-appliances" },
+  { id: 11, name: "Watchs & Accessories", href: "/category/watchs-and-accessories" },
+  { id: 12, name: "GPS & Navigation", href: "/category/gps-and-navigation" },
+  { id: 13, name: "Warable Technology", href: "/category/warable-technology" },
+];
+
 
   return (
     <div className="w-full bg-white border-b relative">
@@ -176,21 +183,21 @@ export default function BottomHeader() {
                   All Category
                 </span>
                 <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={`transition-transform ${isCategoryOpen ? "rotate-180" : ""}`}
-                >
-                  <path
-                    d="M13 6L8 11L3 6"
-                    stroke="#191C1F"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  className={`transition-transform ${isCategoryOpen ? "rotate-180" : ""}`}
+>
+  <path
+    d="M12 6L8 10L4 6"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+</svg>
+
 
                 {/* Выпадающее меню для десктопа */}
                 {isCategoryOpen && (
