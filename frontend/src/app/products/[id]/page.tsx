@@ -471,6 +471,7 @@ import ProductInfoBlock from "@/components/ProductInfoBlock"
 import ProductRecommendationSection from "@/components/ProductRecommendationSection";
 import Footer from "@/components/Footer";
 
+
 type Product = {
   id: number;
   name: string;
@@ -551,7 +552,7 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
       
       </section>
       
-      <ProductRecommendationSection currentProduct={product as any} products={[]} />
+      <ProductRecommendationSection currentProduct={product as any} />
       < Footer />
 
       

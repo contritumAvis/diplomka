@@ -173,25 +173,15 @@
 //     </main>
 //   );
 // }
-
 "use client";
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import ProductCard from "@/components/ProductCard";
-
-type Product = {
-  id: number;
-  name: string;
-  description?: string;
-  basePrice: number;
-  thumbnail?: string;
-  images: { url: string }[];
-  brand?: { name: string };
-  category?: { name: string };
-};
+import { Product as ProductType } from "@/types/product"; // ✅ используем твой тип
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -218,9 +208,70 @@ export default function ProductsPage() {
       <h1 className="text-2xl font-bold mb-6">Наши товары</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} variant="vertical" />
+          <ProductCard
+            key={product.id}
+            product={{
+              id: product.id,
+              name: product.name,
+              basePrice: product.price ?? product.basePrice ?? 0, // price берём из price или basePrice
+              thumbnail: product.thumbnail ?? product.imageUrl, // thumbnail берём из thumbnail или imageUrl
+               // если нет данных о наличии
+            }}
+            variant="vertical"
+          />
         ))}
       </div>
     </main>
   );
 }
+
+// "use client";
+// import React, { useEffect, useState } from "react";
+// import axios from "axios";
+// import ProductCard from "@/components/ProductCard";
+
+// type Product = {
+//   id: number;
+//   name: string;
+//   description?: string;
+//   basePrice: number;
+//   thumbnail?: string;
+//   images: { url: string }[];
+//   brand?: { name: string };
+//   category?: { name: string };
+// };
+
+// export default function ProductsPage() {
+//   const [products, setProducts] = useState<Product[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+
+//   useEffect(() => {
+//     const fetchProducts = async () => {
+//       try {
+//         const res = await axios.get("http://localhost:5000/api/products");
+//         setProducts(res.data);
+//       } catch (err) {
+//         console.error(err);
+//         setError("Ошибка при загрузке товаров");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchProducts();
+//   }, []);
+
+//   if (loading) return <div className="text-center text-lg mt-10">Загрузка...</div>;
+//   if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
+
+//   return (
+//     <main className="p-6">
+//       <h1 className="text-2xl font-bold mb-6">Наши товары</h1>
+//       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+//         {products.map((product) => (
+//           <ProductCard key={product.id} product={product} variant="vertical" />
+//         ))}
+//       </div>
+//     </main>
+//   );
+// }

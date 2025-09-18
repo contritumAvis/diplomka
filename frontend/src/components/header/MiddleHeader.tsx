@@ -50,23 +50,93 @@
 //   );
 // }
 
-"use client";
 
-import Link from 'next/link';
-import UserDropdown from './UserDropdown';
-import { useState } from 'react';
-import CartModal from '../CartModal';
-import FavoriteModal from '../FavoriteModal';
+
+
+
+
+
+
+
+
+
+
+
+// "use client";
+
+// import Link from 'next/link';
+// import UserDropdown from './UserDropdown';
+// import { useState } from 'react';
+// import CartModal from '../CartModal';
+// import FavoriteModal from '../FavoriteModal';
+
+// export default function MiddleHeader() {
+//   const [cartOpen, setCartOpen] = useState(false);
+//   const [favOpen, setFavOpen] = useState(false);
+
+//   return (
+//     <div className="bg-[#1B6392] w-full">
+//       <section className="px-4 md:px-24 lg:px-28">
+//         <div className="max-w-[1440px] mx-auto flex items-center justify-between h-[96px]">
+          
+//           {/* Лого */}
+//           <div className="flex-shrink-0">
+//             <img src="/clicon.svg" alt="Clicon" className="h-8 w-auto" />
+//           </div>
+
+//           {/* Поиск */}
+//           <div className="flex-grow flex justify-center px-4">
+//             <div className="relative w-full max-w-[646px]">
+//               <input
+//                 type="text"
+//                 placeholder="Search for anything..."
+//                 className="w-full h-[48px] rounded-md bg-white text-[14px] pl-4 pr-12 text-black placeholder-gray-500 outline-none"
+//               />
+//               <img src="/lupa.svg" alt="Search" className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5" />
+//             </div>
+//           </div>
+
+//           {/* Иконки */}
+//           <div className="flex items-center justify-end flex-shrink-0 gap-4 w-[144px] h-[32px]">
+//             <button onClick={() => setCartOpen(true)}>
+//               <img src="/shopping.svg" alt="Cart" className="w-5 h-5" />
+//             </button>
+//             <button onClick={() => setFavOpen(true)}>
+//               <img src="/heart.svg" alt="Favorites" className="w-5 h-5" />
+//             </button>
+//             <UserDropdown />
+//           </div>
+//         </div>
+//       </section>
+
+//       {/* Модалки */}
+//       <CartModal isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+//       <FavoriteModal isOpen={favOpen} onClose={() => setFavOpen(false)} />
+//     </div>
+//   );
+// }
+'use client';
+
+import Link from "next/link";
+import UserDropdown from "./UserDropdown";
+import { useState } from "react";
+import { useRouter } from "next/navigation"; // навигация
 
 export default function MiddleHeader() {
-  const [cartOpen, setCartOpen] = useState(false);
-  const [favOpen, setFavOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (search.trim() !== "") {
+      router.push(`/search?query=${encodeURIComponent(search)}`);
+    }
+  };
 
   return (
     <div className="bg-[#1B6392] w-full">
       <section className="px-4 md:px-24 lg:px-28">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between h-[96px]">
-          
           {/* Лого */}
           <div className="flex-shrink-0">
             <img src="/clicon.svg" alt="Clicon" className="h-8 w-auto" />
@@ -74,32 +144,121 @@ export default function MiddleHeader() {
 
           {/* Поиск */}
           <div className="flex-grow flex justify-center px-4">
-            <div className="relative w-full max-w-[646px]">
+            <form
+              onSubmit={handleSearch}
+              className="relative w-full max-w-[646px]"
+            >
               <input
                 type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search for anything..."
                 className="w-full h-[48px] rounded-md bg-white text-[14px] pl-4 pr-12 text-black placeholder-gray-500 outline-none"
               />
-              <img src="/lupa.svg" alt="Search" className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5" />
-            </div>
+              <button
+                type="submit"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2"
+              >
+                <img
+                  src="/lupa.svg"
+                  alt="Search"
+                  className="w-5 h-5 pointer-events-none"
+                />
+              </button>
+            </form>
           </div>
 
           {/* Иконки */}
           <div className="flex items-center justify-end flex-shrink-0 gap-4 w-[144px] h-[32px]">
-            <button onClick={() => setCartOpen(true)}>
+            {/* Вместо модалки просто переход на /cart */}
+            <button onClick={() => router.push("/korzina")}>
               <img src="/shopping.svg" alt="Cart" className="w-5 h-5" />
             </button>
-            <button onClick={() => setFavOpen(true)}>
+            <button onClick={() => router.push("/wishlist")}>
               <img src="/heart.svg" alt="Favorites" className="w-5 h-5" />
             </button>
             <UserDropdown />
           </div>
         </div>
       </section>
-
-      {/* Модалки */}
-      <CartModal isOpen={cartOpen} onClose={() => setCartOpen(false)} />
-      <FavoriteModal isOpen={favOpen} onClose={() => setFavOpen(false)} />
     </div>
   );
 }
+
+
+// "use client";
+
+// import Link from "next/link";
+// import UserDropdown from "./UserDropdown";
+// import { useState } from "react";
+// import { useRouter } from "next/navigation"; // навигация
+// import CartModal from "../CartModal";
+// import FavoriteModal from "../FavoriteModal";
+
+// export default function MiddleHeader() {
+//   const [cartOpen, setCartOpen] = useState(false);
+//   const [favOpen, setFavOpen] = useState(false);
+//   const [search, setSearch] = useState("");
+//   const router = useRouter();
+
+//   const handleSearch = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     if (search.trim() !== "") {
+//       router.push(`/search?query=${encodeURIComponent(search)}`);
+//     }
+//   };
+
+//   return (
+//     <div className="bg-[#1B6392] w-full">
+//       <section className="px-4 md:px-24 lg:px-28">
+//         <div className="max-w-[1440px] mx-auto flex items-center justify-between h-[96px]">
+//           {/* Лого */}
+//           <div className="flex-shrink-0">
+//             <img src="/clicon.svg" alt="Clicon" className="h-8 w-auto" />
+//           </div>
+
+//           {/* Поиск */}
+//           <div className="flex-grow flex justify-center px-4">
+//             <form
+//               onSubmit={handleSearch}
+//               className="relative w-full max-w-[646px]"
+//             >
+//               <input
+//                 type="text"
+//                 value={search}
+//                 onChange={(e) => setSearch(e.target.value)}
+//                 placeholder="Search for anything..."
+//                 className="w-full h-[48px] rounded-md bg-white text-[14px] pl-4 pr-12 text-black placeholder-gray-500 outline-none"
+//               />
+//               <button
+//                 type="submit"
+//                 className="absolute right-4 top-1/2 transform -translate-y-1/2"
+//               >
+//                 <img
+//                   src="/lupa.svg"
+//                   alt="Search"
+//                   className="w-5 h-5 pointer-events-none"
+//                 />
+//               </button>
+//             </form>
+//           </div>
+
+//           {/* Иконки */}
+//           <div className="flex items-center justify-end flex-shrink-0 gap-4 w-[144px] h-[32px]">
+//             <button onClick={() => setCartOpen(true)}>
+//               <img src="/shopping.svg" alt="Cart" className="w-5 h-5" />
+//             </button>
+//             <button onClick={() => setFavOpen(true)}>
+//               <img src="/heart.svg" alt="Favorites" className="w-5 h-5" />
+//             </button>
+//             <UserDropdown />
+//           </div>
+//         </div>
+//       </section>
+
+//       {/* Модалки */}
+//       <CartModal isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+//       <FavoriteModal isOpen={favOpen} onClose={() => setFavOpen(false)} />
+//     </div>
+//   );
+// }

@@ -229,8 +229,6 @@
 //     res.status(500).json({ message: error.message });
 //   }
 // };
-
-
 import { Request, Response } from "express";
 import prisma from "../prisma";
 import multer from "multer";
@@ -247,10 +245,7 @@ const uploadToCloudinary = (buffer: Buffer, folder = "products"): Promise<string
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder },
-      (
-        error: UploadApiErrorResponse | undefined,
-        result: UploadApiResponse | undefined
-      ) => {
+      (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
         if (error) return reject(error);
         if (!result) return reject(new Error("Cloudinary result is empty"));
         resolve(result.secure_url);
@@ -269,9 +264,7 @@ export const createProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Загрузите хотя бы одну картинку" });
     }
 
-    const imageUploads = await Promise.all(
-      files.map((file) => uploadToCloudinary(file.buffer))
-    );
+    const imageUploads = await Promise.all(files.map((file) => uploadToCloudinary(file.buffer)));
 
     const product = await prisma.product.create({
       data: {
@@ -284,11 +277,15 @@ export const createProduct = async (req: Request, res: Response) => {
         images: {
           create: imageUploads.map((url) => ({ url })),
         },
+        variants: {
+          create: [{ price: parseFloat(basePrice) }], // создаём один вариант по умолчанию
+        },
       },
       include: {
         images: true,
         brand: true,
         category: true,
+        variants: true, // ✅ теперь отдаём варианты
       },
     });
 
@@ -303,20 +300,37 @@ export const createProduct = async (req: Request, res: Response) => {
 // --- Получение всех товаров ---
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const products = await prisma.product.findMany({
-      include: {
-        images: true,
-        brand: true,
-        category: true,
-      },
-      orderBy: { createdAt: "desc" }, // чтобы новые шли первыми
-    });
+    const { category } = req.query;
+
+    let products;
+
+    if (category === "electronics-devices") {
+      products = await prisma.product.findMany({
+        include: {
+          images: true,
+          brand: true,
+          category: true,
+          variants: true, // ✅ сразу отдаём варианты
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } else {
+      products = await prisma.product.findMany({
+        where: category ? { category: { slug: String(category) } } : undefined,
+        include: {
+          images: true,
+          brand: true,
+          category: true,
+          variants: true, // ✅ сразу отдаём варианты
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    }
 
     res.json(products);
-  } catch (err) {
-    const error = err as Error;
-    console.error("Ошибка при получении товаров:", error.message, error);
-    res.status(500).json({ message: error.message });
+  } catch (error) {
+    console.error("Ошибка при получении товаров:", error);
+    res.status(500).json({ message: "Ошибка при получении продуктов" });
   }
 };
 
@@ -328,9 +342,10 @@ export const getProductById = async (req: Request, res: Response) => {
     const product = await prisma.product.findUnique({
       where: { id: Number(id) },
       include: {
-        images: true, // ✅ добавил, чтобы и картинки шли
+        images: true,
         brand: true,
         category: true,
+        variants: true, // ✅ отдаём варианты
       },
     });
 
@@ -344,3 +359,118 @@ export const getProductById = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Ошибка сервера" });
   }
 };
+
+
+// import { Request, Response } from "express";
+// import prisma from "../prisma";
+// import multer from "multer";
+
+// import cloudinary from "../cloudinaryConfig";
+// import type { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
+
+// // --- Настройка Multer для загрузки ---
+// const storage = multer.memoryStorage();
+// export const upload = multer({ storage });
+
+// // Вспомогательная функция для загрузки в Cloudinary
+// const uploadToCloudinary = (buffer: Buffer, folder = "products"): Promise<string> =>
+//   new Promise((resolve, reject) => {
+//     const stream = cloudinary.uploader.upload_stream(
+//       { folder },
+//       (
+//         error: UploadApiErrorResponse | undefined,
+//         result: UploadApiResponse | undefined
+//       ) => {
+//         if (error) return reject(error);
+//         if (!result) return reject(new Error("Cloudinary result is empty"));
+//         resolve(result.secure_url);
+//       }
+//     );
+//     stream.end(buffer);
+//   });
+
+// // --- Создание товара ---
+// export const createProduct = async (req: Request, res: Response) => {
+//   try {
+//     const { name, description, basePrice, categoryId, brandId } = req.body;
+
+//     const files = (req.files as Express.Multer.File[]) ?? [];
+//     if (files.length === 0) {
+//       return res.status(400).json({ message: "Загрузите хотя бы одну картинку" });
+//     }
+
+//     const imageUploads = await Promise.all(
+//       files.map((file) => uploadToCloudinary(file.buffer))
+//     );
+
+//     const product = await prisma.product.create({
+//       data: {
+//         name,
+//         description,
+//         basePrice: parseFloat(basePrice),
+//         thumbnail: imageUploads[0],
+//         categoryId: categoryId ? Number(categoryId) : null,
+//         brandId: brandId ? Number(brandId) : null,
+//         images: {
+//           create: imageUploads.map((url) => ({ url })),
+//         },
+//       },
+//       include: {
+//         images: true,
+//         brand: true,
+//         category: true,
+//       },
+//     });
+
+//     res.status(201).json(product);
+//   } catch (err) {
+//     const error = err as Error;
+//     console.error("Ошибка при добавлении товара:", error.message, error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// // --- Получение всех товаров ---
+// export const getProducts = async (req: Request, res: Response) => {
+//   try {
+//     const products = await prisma.product.findMany({
+//       include: {
+//         images: true,
+//         brand: true,
+//         category: true,
+//       },
+//       orderBy: { createdAt: "desc" }, // чтобы новые шли первыми
+//     });
+
+//     res.json(products);
+//   } catch (err) {
+//     const error = err as Error;
+//     console.error("Ошибка при получении товаров:", error.message, error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// // --- Получение товара по ID ---
+// export const getProductById = async (req: Request, res: Response) => {
+//   try {
+//     const { id } = req.params;
+
+//     const product = await prisma.product.findUnique({
+//       where: { id: Number(id) },
+//       include: {
+//         images: true, // ✅ добавил, чтобы и картинки шли
+//         brand: true,
+//         category: true,
+//       },
+//     });
+
+//     if (!product) {
+//       return res.status(404).json({ message: "Товар не найден" });
+//     }
+
+//     res.json(product);
+//   } catch (err) {
+//     console.error("Ошибка при получении товара по ID:", err);
+//     res.status(500).json({ message: "Ошибка сервера" });
+//   }
+// };

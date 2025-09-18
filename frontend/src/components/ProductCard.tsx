@@ -1351,6 +1351,226 @@
 //   );
 // };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// "use client";
+// import React, { useState } from "react";
+// import Link from "next/link";
+// import { useUser } from "@/context/UserContext";
+// import api from "@/api/axios";
+
+// type ProductVariant = {
+//   id: number;
+//   price?: number;
+//   stock?: number;
+//   color?: string;
+//   memory?: string;
+//   storage?: string;
+//   size?: string;
+//   imageUrl?: string;
+// };
+
+// type Product = {
+//   id: number;
+//   name: string;
+//   description?: string;
+//   basePrice: number;
+//   thumbnail?: string;
+//   images?: { url: string }[];
+//   variants?: ProductVariant[];
+// };
+
+// type ProductCardProps = {
+//   product: Product;
+//   variant?: "horizontal" | "vertical";
+// };
+
+// const ProductCard: React.FC<ProductCardProps> = ({ product, variant = "vertical" }) => {
+//   const { user } = useUser();
+
+//   const [favLoading, setFavLoading] = useState(false);
+//   const [cartLoading, setCartLoading] = useState(false);
+//   const [toast, setToast] = useState("");
+
+//   // Берем картинку: сначала thumbnail, потом первый image.url, потом placeholder
+//   const imageSrc =
+//   product.images && product.images.length > 0
+//     ? (typeof product.images[0] === "string"
+//         ? product.images[0]
+//         : product.images[0].url)
+//     : product.thumbnail || "https://via.placeholder.com/300x200?text=Нет+фото";
+
+//   const showToast = (msg: string) => {
+//     setToast(msg);
+//     setTimeout(() => setToast(""), 2000);
+//   };
+
+//   const handleAddToFavorites = async (e: React.MouseEvent) => {
+//     e.preventDefault();
+//     if (!user?.id) return showToast("Сначала авторизуйся!");
+
+//     try {
+//       setFavLoading(true);
+//       const response = await api.post("/favorites", { productId: product.id });
+//       showToast(response.data?.message || "Добавлено в избранное ❤️");
+//     } catch (err: any) {
+//       console.error(err);
+//       showToast(err.response?.data?.message || "Ошибка при добавлении в избранное");
+//     } finally {
+//       setFavLoading(false);
+//     }
+//   };
+
+//   const handleAddToCart = async (e: React.MouseEvent) => {
+//     e.preventDefault();
+//     if (!user?.id) return showToast("Сначала авторизуйся!");
+
+//     const variantId = product.variants?.[0]?.id;
+//     if (!variantId) return showToast("У этого товара нет доступного варианта");
+
+//     try {
+//       setCartLoading(true);
+//       const response = await api.post("/cart", { variantId, quantity: 1 });
+//       showToast(response.data?.message || "Товар добавлен в корзину 🛒");
+//     } catch (err: any) {
+//       console.error(err);
+//       showToast(err.response?.data?.message || "Ошибка при добавлении в корзину");
+//     } finally {
+//       setCartLoading(false);
+//     }
+//   };
+
+//   const buttonClass =
+//     "w-12 h-12 flex items-center justify-center rounded-full bg-white shadow hover:scale-110 transition";
+
+//   if (variant === "horizontal") {
+//     return (
+//       <Link href={`/products/${product.id}`}>
+//         <div className="flex w-[312px] max-w-full h-[104px] border rounded-md p-3 gap-3 bg-white hover:shadow-md transition">
+//           <img
+//             src={imageSrc}
+//             alt={product.name}
+//             className="w-20 h-20 object-cover rounded-md"
+//           />
+//           <div className="flex flex-col justify-between w-[196px]">
+//             <p className="text-sm leading-5 font-normal text-gray-800 line-clamp-2">
+//               {product.name}
+//             </p>
+//             <p className="text-sm font-semibold text-gray-900">{product.basePrice} ₸</p>
+//           </div>
+//         </div>
+//       </Link>
+//     );
+//   }
+
+//   // Вертикальная карточка
+//   return (
+//     <div className="w-[234px] max-w-full h-[320px] border rounded-md p-4 flex flex-col bg-white hover:shadow-md transition group relative">
+//       <div className="relative">
+//         <img
+//           src={imageSrc}
+//           alt={product.name}
+//           className="w-[202px] h-[172px] object-cover rounded-md mx-auto"
+//         />
+//         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition gap-4">
+//           <button
+//             onClick={handleAddToFavorites}
+//             className={buttonClass}
+//             disabled={favLoading}
+//           >
+//             {favLoading ? "❤️…" : "❤️"}
+//           </button>
+//           <button
+//             onClick={handleAddToCart}
+//             className={buttonClass}
+//             disabled={cartLoading}
+//           >
+//             {cartLoading ? "🛒…" : "🛒"}
+//           </button>
+//           <Link href={`/products/${product.id}`} className={buttonClass}>
+//             👁
+//           </Link>
+//         </div>
+//       </div>
+//       <div className="mt-4 flex flex-col justify-between flex-1">
+//         <p className="text-sm leading-5 font-normal text-gray-800 line-clamp-2">
+//           {product.name}
+//         </p>
+//         <p className="text-sm font-semibold text-gray-900 mt-auto">
+//           {product.basePrice} ₸
+//         </p>
+//       </div>
+
+//       {toast && (
+//         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1 rounded-md shadow-md animate-fadeInOut">
+//           {toast}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default ProductCard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
@@ -1374,7 +1594,7 @@ type Product = {
   description?: string;
   basePrice: number;
   thumbnail?: string;
-  images?: { url: string }[];
+  images?: string[]; // ✅ строки с Cloudinary-ссылками
   variants?: ProductVariant[];
 };
 
@@ -1390,10 +1610,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = "vertical"
   const [cartLoading, setCartLoading] = useState(false);
   const [toast, setToast] = useState("");
 
-  // Берем картинку: сначала thumbnail, потом первый image.url, потом placeholder
+  // ✅ картинка: сначала thumbnail, потом первая картинка, потом плейсхолдер
   const imageSrc =
     product.thumbnail ||
-    product.images?.[0]?.url ||
+    (product.images && product.images.length > 0 ? product.images[0] : null) ||
     "https://via.placeholder.com/300x200?text=Нет+фото";
 
   const showToast = (msg: string) => {
@@ -1426,10 +1646,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = "vertical"
 
     try {
       setCartLoading(true);
-      const response = await api.post("/cart", { variantId, quantity: 1 });
+      const response = await api.post("/cart", {
+        productId: product.id, // ✅ теперь есть и productId
+        variantId,
+        quantity: 1,
+      });
       showToast(response.data?.message || "Товар добавлен в корзину 🛒");
     } catch (err: any) {
-      console.error(err);
+      console.error("Ошибка добавления в корзину:", err.response?.data || err.message);
       showToast(err.response?.data?.message || "Ошибка при добавлении в корзину");
     } finally {
       setCartLoading(false);
@@ -1507,6 +1731,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = "vertical"
 };
 
 export default ProductCard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // "use client";
 // import React, { useState } from "react";

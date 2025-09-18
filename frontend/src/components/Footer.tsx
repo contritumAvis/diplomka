@@ -106,7 +106,7 @@ export default function Footer() {
                 {quickLinks.map((link, i) => (
                   <Link
                     key={i}
-                    href="/"
+                    href="/track-order"
                     className="text-sm font-medium text-gray-400 hover:text-gray-200"
                   >
                     {link}

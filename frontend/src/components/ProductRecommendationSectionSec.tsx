@@ -1,16 +1,17 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard";
+import { Product } from "@/types/product";
 
-type Product = {
-  id: number;
-  name: string;
-  basePrice: number;
-  thumbnail?: string;
-  images?: { url: string }[];
-  brand?: { name: string };
-  categoryId?: number;
-};
+const mapProductForCard = (p: Product) => ({
+  id: p.id,
+  name: p.name,
+  price: p.price ?? 0,
+  basePrice: p.basePrice ?? p.price ?? 0,
+  thumbnail: p.thumbnail ?? p.imageUrl ?? "/no-image.png",
+});
+
+
 
 export default function ProductRecommendationSectionSec() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -87,10 +88,15 @@ export default function ProductRecommendationSectionSec() {
                 {section.items.length > 0
                   ? section.items.map((product) => (
                       <ProductCard
-                        key={product.id}
-                        product={product}
-                        variant="horizontal"
-                      />
+  key={product.id}
+  product={{
+    ...product,
+    basePrice: product.basePrice ?? product.price, 
+    thumbnail: product.thumbnail ?? product.imageUrl,
+  }}
+  variant="horizontal"
+/>
+
                     ))
                   : [1, 2, 3].map((i) => <Placeholder key={i} />)}
               </div>

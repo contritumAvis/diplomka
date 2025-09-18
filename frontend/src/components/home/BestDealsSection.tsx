@@ -100,6 +100,10 @@
 //     </section>
 //   );
 // }
+
+
+
+
 "use client";
 import React, { useEffect, useState } from "react";
 import Container from "@/components/ui/Container";
@@ -213,9 +217,10 @@ export default function BestDealsSection() {
 
           {/* Сетка карточек справа */}
           <div className="flex-1 grid grid-cols-4 auto-rows-fr gap-0">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} variant="vertical" />
-            ))}
+           {products.map((product) => (
+  <ProductCard key={product.id} product={product as any} variant="vertical" />
+))}
+
           </div>
         </div>
       </Container>

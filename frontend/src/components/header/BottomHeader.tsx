@@ -221,8 +221,8 @@ export default function BottomHeader() {
 
               {/* Навигация (скрыта на мобильных) */}
               <div className="hidden md:flex items-center gap-4">
-                <NavItem to="/404" icon={<TrackOrderIcon />} text="Track Order" />
-                <NavItem to="/404" icon={<CompareIcon />} text="Compare" />
+                <NavItem to="/track-order" icon={<TrackOrderIcon />} text="Track Order" />
+                <NavItem to="/track-order" icon={<CompareIcon />} text="Compare" />
                 <NavItem to="/404" icon={<CustomerSupportIcon />} text="Customer Support" />
                 <NavItem to="/404" icon={<NeedHelpIcon />} text="Need Help" />
               </div>

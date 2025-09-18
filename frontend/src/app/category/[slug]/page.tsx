@@ -1473,6 +1473,405 @@
 
 
 
+// frontend/src/app/category/[slug]/page.tsx
+"use client";
+import React, { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import Container from "@/components/ui/Container";
+import ProductCard from "@/components/ProductCard";
+import Footer from "@/components/Footer";
+import { Range } from "react-range";
+import { usePathname } from "next/navigation";
+import TopHeader from "@/components/header/Header";
+import BottomHeader from "@/components/header/BottomHeader";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import axios from "axios";
+
+const STEP = 100;
+const MIN = 0;
+const MAX = 10000;
+const PER_PAGE = 24; // теперь 6 рядов по 4 карточки
+
+const categories = [
+  { id: 0, name: "Electronics Devices", slug: "electronics-devices" },
+  { id: 3, name: "Computer & Laptop", slug: "computer-laptop" },
+  { id: 4, name: "Computer Accessories", slug: "computer-accessories" },
+  { id: 5, name: "SmartPhone", slug: "smartphone" },
+  { id: 6, name: "Headphone", slug: "headphone" },
+  { id: 7, name: "Mobile Accessories", slug: "mobile-accessories" },
+  { id: 8, name: "Gaming Console", slug: "gaming-console" },
+  { id: 9, name: "Camera & Photo", slug: "camera-and-photo" },
+  { id: 10, name: "TV & Homes Appliances", slug: "tv-and-homes-appliances" },
+  { id: 11, name: "Watchs & Accessories", slug: "watchs-and-accessories" },
+  { id: 12, name: "GPS & Navigation", slug: "gps-navigation" },
+  { id: 13, name: "Warable Technology", slug: "warable-technology" },
+];
+
+const brands = [
+  "Apple", "Asus", "Acer", "HP", "Lenovo", "Logitech", "Microsoft",
+  "Samsung", "Xiaomi", "Huawei", "Realme", "Sony", "JBL",
+  "Sony PlayStation", "Microsoft Xbox", "Nintendo", "Canon", "LG"
+];
+
+export default function CategoriesPage() {
+  const pathname = usePathname() ?? "";
+  const parts = pathname.split("/").filter(Boolean);
+  const slug = parts.length ? parts[parts.length - 1] : "";
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [priceRange, setPriceRange] = useState<number[]>([MIN, MAX]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [search, setSearch] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // загрузка товаров из API
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+  `${process.env.NEXT_PUBLIC_API_URL}/api/products?category=${slug}`
+);
+
+        setProducts(res.data || []);
+      } catch (err) {
+        console.error("Error fetching products", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (slug) fetchProducts();
+  }, [slug]);
+
+  useEffect(() => {
+    const found = categories.find((c) => c.slug === slug);
+    if (found) {
+      setSelectedCategory(found.name);
+      setPage(1);
+    } else {
+      if (!slug) setSelectedCategory(null);
+    }
+  }, [slug]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return products.filter((p) => {
+      const categoryMatch = selectedCategory ? p.category?.name === selectedCategory : true;
+      const brandMatch = selectedBrands.length ? selectedBrands.includes(p.brand) : true;
+      const priceMatch = p.basePrice >= priceRange[0] && p.basePrice <= priceRange[1];
+      const searchMatch = q ? p.name.toLowerCase().includes(q) : true;
+      return categoryMatch && brandMatch && priceMatch && searchMatch;
+    });
+  }, [products, selectedCategory, selectedBrands, priceRange, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  useEffect(() => {
+    if (page > totalPages) setPage(1);
+  }, [totalPages, page]);
+
+  const paginated = useMemo(
+    () => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE),
+    [filtered, page]
+  );
+
+  const toggleBrand = (brand: string) => {
+    setPage(1);
+    setSelectedBrands((prev) => (prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]));
+  };
+
+  const clearCategory = () => {
+    setSelectedCategory(null);
+    setPage(1);
+  };
+
+  const removeBrand = (brand: string) => {
+    setSelectedBrands((prev) => prev.filter((b) => b !== brand));
+    setPage(1);
+  };
+
+  return (
+    <>
+      <TopHeader />
+      <BottomHeader />
+
+      <section className="px-4 md:px-24 lg:px-28">
+        <div className="max-w-[1440px] mx-auto">
+          <Breadcrumbs
+            items={[
+              { label: "Home", href: "/" },
+              { label: "Categories", href: "/category" },
+              { label: selectedCategory || slug, href: `/category/${slug}` },
+            ]}
+          />
+        </div>
+      </section>
+
+      <Container className="mt-10">
+        <div className="grid grid-cols-[312px_1fr] gap-8">
+          {/* ===== ЛЕВАЯ КОЛОНКА ===== */}
+          <aside className="flex flex-col gap-6">
+            {/* Categories */}
+            <div>
+              <h2 className="text-gray-900 font-medium text-sm uppercase">Category</h2>
+              <div className="mt-4 flex flex-col gap-4">
+                {categories.map((cat) => {
+                  const isActive = selectedCategory === cat.name;
+                  return (
+                    <Link key={cat.id} href={`/category/${cat.slug}`} className="no-underline">
+                      <div className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                        <span
+                          className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                            isActive ? "border-2 border-[#FA8232]" : "border border-gray-200"
+                          }`}
+                        >
+                          {isActive && <span className="w-2 h-2 rounded-full bg-white" />}
+                        </span>
+                        <span className="text-gray-900">{cat.name}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            <hr className="border-gray-100 my-6" />
+
+            {/* Price Range */}
+            <div>
+              <h2 className="text-gray-900 font-medium text-sm uppercase">Price Range</h2>
+              <div className="mt-4">
+                <Range
+                  step={STEP}
+                  min={MIN}
+                  max={MAX}
+                  values={priceRange}
+                  onChange={(values) => {
+                    setPriceRange(values);
+                    setPage(1);
+                  }}
+                  renderTrack={({ props, children }) => (
+                    <div {...props} className="h-3 w-full rounded bg-gray-100 relative">
+                      <div
+                        className="h-3 rounded bg-[#FA8232] absolute"
+                        style={{
+                          left: `${(priceRange[0] / MAX) * 100}%`,
+                          right: `${100 - (priceRange[1] / MAX) * 100}%`,
+                        }}
+                      />
+                      {children}
+                    </div>
+                  )}
+                  renderThumb={({ props }) => {
+  const { key, ...rest } = props;
+  return (
+    <div
+      key={key}
+      {...rest}
+      className="w-5 h-5 rounded-full border-2 border-[#FA8232] bg-white shadow cursor-pointer flex items-center justify-center"
+    />
+  );
+}}
+                />
+
+                {/* подписи */}
+                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  {Array.from({ length: 6 }, (_, i) => i * 2000).map((v) => (
+                    <span key={v}>${v}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Min / Max Price */}
+              <div className="mt-4 flex gap-4">
+                <div className="w-[150px] h-10 border border-gray-100 rounded-[3px] flex items-center px-3">
+                  <span className="text-gray-500 text-sm">Min Price</span>
+                </div>
+                <div className="w-[150px] h-10 border border-gray-100 rounded-[3px] flex items-center px-3">
+                  <span className="text-gray-500 text-sm">Max Price</span>
+                </div>
+              </div>
+
+              {/* Радио диапазоны */}
+              <div className="mt-4 w-[312px] h-[212px] flex flex-col justify-between">
+                {[
+                  "All Price",
+                  "Under $20",
+                  "$25 to $100",
+                  "$100 to $300",
+                  "$300 to $500",
+                  "$500 to $1,000",
+                  "$1,000 to $10,000",
+                ].map((label, idx) => (
+                  <label key={idx} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                    <input type="radio" name="priceRangeRadio" className="peer hidden" />
+                    <span className="w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center peer-checked:border-2 peer-checked:border-[#FA8232]" />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <hr className="border-gray-100 my-6" />
+
+            {/* Brands */}
+            <div>
+              <h2 className="text-gray-900 font-medium text-sm uppercase">Popular Brands</h2>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {brands.map((brand) => {
+                  const active = selectedBrands.includes(brand);
+                  return (
+                    <button
+                      key={brand}
+                      onClick={() => toggleBrand(brand)}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <span
+                        className={`w-5 h-5 flex items-center justify-center ${
+                          active ? "bg-[#FA8232] border-2 border-[#FA8232] text-white" : "bg-white border border-[#C9CFD2]"}
+                        `}
+                      >
+                        {active && (
+                          <svg width="10" height="7" viewBox="0 0 10 7" fill="none">
+                            <path d="M1 3.5L3.5 6L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                      <span className="text-gray-700">{brand}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <hr className="border-gray-100 my-6" />
+
+            {/* SVG-блок */}
+            <div className="border rounded p-8 flex flex-col items-center gap-6">
+              <Image src="/watch.svg" alt="watch" width={180} height={180} />
+              <Image src="/series.svg" alt="series" width={248} height={175} />
+              <div className="flex flex-col gap-3">
+                <Image src="/add.svg" alt="add" width={248} height={48} />
+                <Image src="/view.svg" alt="view" width={248} height={48} />
+              </div>
+            </div>
+          </aside>
+
+          {/* ===== ПРАВАЯ КОЛОНКА ===== */}
+          <main className="flex flex-col">
+            {/* Search */}
+            <div className="flex items-center border rounded px-4 py-2 w-[424px]">
+              <input
+                type="text"
+                placeholder="Search for anything..."
+                className="flex-1 text-sm text-gray-500 outline-none"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+              />
+              <span className="w-5 h-5 bg-gray-300 rounded" />
+            </div>
+
+            {/* Active Filters */}
+            <div className="mt-4 flex items-center justify-between bg-gray-50 px-6 py-3 rounded">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">Active Filters:</span>
+                {selectedCategory && (
+                  <div className="flex items-center gap-2 bg-white border rounded px-3 py-1 text-sm">
+                    <span className="text-gray-700">{selectedCategory}</span>
+                    <button onClick={clearCategory} className="text-gray-500 text-xs">✕</button>
+                  </div>
+                )}
+                {selectedBrands.map((b) => (
+                  <div key={b} className="flex items-center gap-2 bg-white border rounded px-3 py-1 text-sm">
+                    <span className="text-gray-700">{b}</span>
+                    <button onClick={() => removeBrand(b)} className="text-gray-500 text-xs">✕</button>
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm font-semibold text-gray-900">
+                {filtered.length} results
+              </div>
+            </div>
+
+            {/* Products Grid */}
+            <div className="mt-6 grid grid-cols-4 gap-4">
+              {loading ? (
+                <div className="col-span-4 text-center text-gray-500 py-12">Loading...</div>
+              ) : paginated.length ? (
+                paginated.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={{
+                      ...p,
+                      thumbnail: p.thumbnail || p.images?.[0]?.url || "/no-image.png",
+                    }}
+                  />
+                ))
+              ) : (
+                <div className="col-span-4 text-center text-gray-500 py-12">No products found</div>
+              )}
+            </div>
+
+            {/* Pagination */}
+            <div className="flex justify-center items-center gap-3 mt-10 mb-[72px]">
+              <button
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                className="w-10 h-10 flex items-center justify-center rounded-full border"
+                disabled={page === 1}
+              >
+                ‹
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setPage(n)}
+                  className={`w-10 h-10 flex items-center justify-center rounded-full border text-sm ${
+                    page === n ? "bg-[#FA8232] border-[#FA8232] text-white" : "border-gray-200 text-gray-400"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                className="w-10 h-10 flex items-center justify-center rounded-full border"
+                disabled={page === totalPages}
+              >
+                ›
+              </button>
+            </div>
+          </main>
+        </div>
+      </Container>
+
+      <Footer />
+    </>
+  );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // // frontend/src/app/category/[slug]/page.tsx
@@ -1492,7 +1891,7 @@
 // const STEP = 100;
 // const MIN = 0;
 // const MAX = 10000;
-// const PER_PAGE = 24; // теперь 6 рядов по 4 карточки
+// const PER_PAGE = 24;
 
 // const categories = [
 //   { id: 0, name: "Electronics Devices", slug: "electronics-devices" },
@@ -1551,7 +1950,7 @@
 //       })),
 //     []
 //   );
-
+  
 //   const filtered = useMemo(() => {
 //     const q = search.trim().toLowerCase();
 //     return products.filter((p) => {
@@ -1575,7 +1974,9 @@
 
 //   const toggleBrand = (brand: string) => {
 //     setPage(1);
-//     setSelectedBrands((prev) => (prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]));
+//     setSelectedBrands((prev) =>
+//       prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+//     );
 //   };
 
 //   const clearCategory = () => {
@@ -1663,20 +2064,19 @@
 //                       </div>
 //                     );
 //                   }}
-//                   renderThumb={({ props }) => {
-//                     const { key, ...restProps } = props as any;
-//                     return (
-//                       <div
-//                         {...restProps}
-//                         className="w-5 h-5 rounded-full border-2 border-[#FA8232] bg-white shadow cursor-pointer flex items-center justify-center"
-//                       >
-//                         <div className="w-[8px] h-[8px] rounded-full bg-white" />
-//                       </div>
-//                     );
-//                   }}
+//                   renderThumb={({ props, index }) => {
+//   return (
+//     <div
+//       {...props}
+//       key={index} // <-- вот добавляем уникальный key для каждого thumb
+//       className="w-5 h-5 rounded-full border-2 border-[#FA8232] bg-white shadow cursor-pointer flex items-center justify-center"
+//     >
+//       <div className="w-[8px] h-[8px] rounded-full bg-white" />
+//     </div>
+//   );
+// }}
 //                 />
 
-//                 {/* подписи */}
 //                 <div className="flex justify-between text-xs text-gray-500 mt-2">
 //                   {Array.from({ length: 6 }, (_, i) => i * 2000).map((v) => (
 //                     <span key={v}>${v}</span>
@@ -1686,29 +2086,58 @@
 
 //               {/* Min / Max Price */}
 //               <div className="mt-4 flex gap-4">
-//                 <div className="w-[150px] h-10 border border-gray-100 rounded-[3px] flex items-center px-3">
-//                   <span className="text-gray-500 text-sm">Min Price</span>
-//                 </div>
-//                 <div className="w-[150px] h-10 border border-gray-100 rounded-[3px] flex items-center px-3">
-//                   <span className="text-gray-500 text-sm">Max Price</span>
-//                 </div>
+//                 <input
+//                   type="number"
+//                   className="w-[150px] h-10 border border-gray-100 rounded-[3px] px-3 text-sm text-gray-700 outline-none"
+//                   value={priceRange[0]}
+//                   onChange={(e) => {
+//                     const val = Math.max(MIN, Number(e.target.value) || 0);
+//                     setPriceRange([Math.min(val, priceRange[1]), priceRange[1]]);
+//                     setPage(1);
+//                   }}
+//                   placeholder="Min Price"
+//                 />
+//                 <input
+//                   type="number"
+//                   className="w-[150px] h-10 border border-gray-100 rounded-[3px] px-3 text-sm text-gray-700 outline-none"
+//                   value={priceRange[1]}
+//                   onChange={(e) => {
+//                     let val = Number(e.target.value) || MAX;
+//                     if (val > MAX) val = MAX;
+//                     setPriceRange([priceRange[0], Math.max(val, priceRange[0])]);
+//                     setPage(1);
+//                   }}
+//                   placeholder="Max Price"
+//                 />
 //               </div>
 
 //               {/* Радио диапазоны */}
-//               <div className="mt-4 w-[312px] h-[212px] flex flex-col justify-between">
+//               <div className="mt-4 w-[312px] flex flex-col gap-2">
 //                 {[
-//                   "All Price",
-//                   "Under $20",
-//                   "$25 to $100",
-//                   "$100 to $300",
-//                   "$300 to $500",
-//                   "$500 to $1,000",
-//                   "$1,000 to $10,000",
-//                 ].map((label, idx) => (
-//                   <label key={idx} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-//                     <input type="radio" name="priceRangeRadio" className="peer hidden" />
+//                   { label: "All Price", min: MIN, max: MAX },
+//                   { label: "Under $20", min: 0, max: 20 },
+//                   { label: "$25 to $100", min: 25, max: 100 },
+//                   { label: "$100 to $300", min: 100, max: 300 },
+//                   { label: "$300 to $500", min: 300, max: 500 },
+//                   { label: "$500 to $1,000", min: 500, max: 1000 },
+//                   { label: "$1,000 to $10,000", min: 1000, max: 10000 },
+//                 ].map((r, idx) => (
+//                   <label
+//                     key={idx}
+//                     className="flex items-center gap-2 cursor-pointer text-sm text-gray-700"
+//                   >
+//                     <input
+//                       type="radio"
+//                       name="priceRangeRadio"
+//                       className="peer hidden"
+//                       checked={priceRange[0] === r.min && priceRange[1] === r.max}
+//                       onChange={() => {
+//                         setPriceRange([r.min, r.max]);
+//                         setPage(1);
+//                       }}
+//                     />
 //                     <span className="w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center peer-checked:border-2 peer-checked:border-[#FA8232]" />
-//                     <span>{label}</span>
+//                     <span>{r.label}</span>
 //                   </label>
 //                 ))}
 //               </div>
@@ -1730,12 +2159,25 @@
 //                     >
 //                       <span
 //                         className={`w-5 h-5 flex items-center justify-center ${
-//                           active ? "bg-[#FA8232] border-2 border-[#FA8232] text-white" : "bg-white border border-[#C9CFD2]"
+//                           active
+//                             ? "bg-[#FA8232] border-2 border-[#FA8232] text-white"
+//                             : "bg-white border border-[#C9CFD2]"
 //                         }`}
 //                       >
 //                         {active && (
-//                           <svg width="10" height="7" viewBox="0 0 10 7" fill="none">
-//                             <path d="M1 3.5L3.5 6L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+//                           <svg
+//                             width="10"
+//                             height="7"
+//                             viewBox="0 0 10 7"
+//                             fill="none"
+//                           >
+//                             <path
+//                               d="M1 3.5L3.5 6L9 1"
+//                               stroke="white"
+//                               strokeWidth="2"
+//                               strokeLinecap="round"
+//                               strokeLinejoin="round"
+//                             />
 //                           </svg>
 //                         )}
 //                       </span>
@@ -1783,13 +2225,23 @@
 //                 {selectedCategory && (
 //                   <div className="flex items-center gap-2 bg-white border rounded px-3 py-1 text-sm">
 //                     <span className="text-gray-700">{selectedCategory}</span>
-//                     <button onClick={clearCategory} className="text-gray-500 text-xs">✕</button>
+//                     <button onClick={clearCategory} className="text-gray-500 text-xs">
+//                       ✕
+//                     </button>
 //                   </div>
 //                 )}
 //                 {selectedBrands.map((b) => (
-//                   <div key={b} className="flex items-center gap-2 bg-white border rounded px-3 py-1 text-sm">
+//                   <div
+//                     key={b}
+//                     className="flex items-center gap-2 bg-white border rounded px-3 py-1 text-sm"
+//                   >
 //                     <span className="text-gray-700">{b}</span>
-//                     <button onClick={() => removeBrand(b)} className="text-gray-500 text-xs">✕</button>
+//                     <button
+//                       onClick={() => removeBrand(b)}
+//                       className="text-gray-500 text-xs"
+//                     >
+//                       ✕
+//                     </button>
 //                   </div>
 //                 ))}
 //               </div>
@@ -1803,7 +2255,9 @@
 //               {paginated.length ? (
 //                 paginated.map((p) => <ProductCard key={p.id} product={p} />)
 //               ) : (
-//                 <div className="col-span-4 text-center text-gray-500 py-12">No products found</div>
+//                 <div className="col-span-4 text-center text-gray-500 py-12">
+//                   No products found
+//                 </div>
 //               )}
 //             </div>
 
@@ -1821,7 +2275,9 @@
 //                   key={n}
 //                   onClick={() => setPage(n)}
 //                   className={`w-10 h-10 flex items-center justify-center rounded-full border text-sm ${
-//                     page === n ? "bg-[#FA8232] border-[#FA8232] text-white" : "border-gray-200 text-gray-400"
+//                     page === n
+//                       ? "bg-[#FA8232] border-[#FA8232] text-white"
+//                       : "border-gray-200 text-gray-400"
 //                   }`}
 //                 >
 //                   {n}
@@ -1833,6 +2289,7 @@
 //                 disabled={page === totalPages}
 //               >
 //                 ›
+                
 //               </button>
 //             </div>
 //           </main>
@@ -1843,429 +2300,3 @@
 //     </>
 //   );
 // }
-
-// frontend/src/app/category/[slug]/page.tsx
-"use client";
-import React, { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import Container from "@/components/ui/Container";
-import ProductCard from "@/components/ProductCard";
-import Footer from "@/components/Footer";
-import { Range } from "react-range";
-import { usePathname } from "next/navigation";
-import TopHeader from "@/components/header/Header";
-import BottomHeader from "@/components/header/BottomHeader";
-import Breadcrumbs from "@/components/Breadcrumbs";
-
-const STEP = 100;
-const MIN = 0;
-const MAX = 10000;
-const PER_PAGE = 24;
-
-const categories = [
-  { id: 0, name: "Electronics Devices", slug: "electronics-devices" },
-  { id: 3, name: "Computer & Laptop", slug: "computer-laptop" },
-  { id: 4, name: "Computer Accessories", slug: "computer-accessories" },
-  { id: 5, name: "SmartPhone", slug: "smartphone" },
-  { id: 6, name: "Headphone", slug: "headphone" },
-  { id: 7, name: "Mobile Accessories", slug: "mobile-accessories" },
-  { id: 8, name: "Gaming Console", slug: "gaming-console" },
-  { id: 9, name: "Camera & Photo", slug: "camera-and-photo" },
-  { id: 10, name: "TV & Homes Appliances", slug: "tv-and-homes-appliances" },
-  { id: 11, name: "Watchs & Accessories", slug: "computer-watchs-and-accessories" },
-  { id: 12, name: "GPS & Navigation", slug: "computer-gps-and-navigation" },
-  { id: 13, name: "Warable Technology", slug: "warable-technology" },
-];
-
-const brands = [
-  "Apple", "Asus", "Acer", "HP", "Lenovo", "Logitech", "Microsoft",
-  "Samsung", "Xiaomi", "Huawei", "Realme", "Sony", "JBL",
-  "Sony PlayStation", "Microsoft Xbox", "Nintendo", "Canon", "LG"
-];
-
-export default function CategoriesPage() {
-  const pathname = usePathname() ?? "";
-  const parts = pathname.split("/").filter(Boolean);
-  const slug = parts.length ? parts[parts.length - 1] : "";
-
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [priceRange, setPriceRange] = useState<number[]>([MIN, MAX]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [search, setSearch] = useState<string>("");
-  const [page, setPage] = useState<number>(1);
-
-  useEffect(() => {
-    const found = categories.find((c) => c.slug === slug);
-    if (found) {
-      setSelectedCategory(found.name);
-      setPage(1);
-    } else {
-      if (!slug) setSelectedCategory(null);
-    }
-  }, [slug]);
-
-  const products = useMemo(
-    () =>
-      Array.from({ length: 48 }, (_, i) => ({
-        id: i + 1,
-        name: `Product ${i + 1}`,
-        basePrice: 500 + i * 300,
-        thumbnail: i === 8 ? "/sample-product-9.jpg" : undefined,
-        images: [{ url: "https://via.placeholder.com/202x172?text=Image" }],
-        _meta: {
-          category: categories[i % categories.length].name,
-          brand: brands[i % brands.length],
-        },
-      })),
-    []
-  );
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return products.filter((p) => {
-      const categoryMatch = selectedCategory ? p._meta.category === selectedCategory : true;
-      const brandMatch = selectedBrands.length ? selectedBrands.includes(p._meta.brand) : true;
-      const priceMatch = p.basePrice >= priceRange[0] && p.basePrice <= priceRange[1];
-      const searchMatch = q ? p.name.toLowerCase().includes(q) : true;
-      return categoryMatch && brandMatch && priceMatch && searchMatch;
-    });
-  }, [products, selectedCategory, selectedBrands, priceRange, search]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  useEffect(() => {
-    if (page > totalPages) setPage(1);
-  }, [totalPages, page]);
-
-  const paginated = useMemo(
-    () => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE),
-    [filtered, page]
-  );
-
-  const toggleBrand = (brand: string) => {
-    setPage(1);
-    setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
-    );
-  };
-
-  const clearCategory = () => {
-    setSelectedCategory(null);
-    setPage(1);
-  };
-
-  const removeBrand = (brand: string) => {
-    setSelectedBrands((prev) => prev.filter((b) => b !== brand));
-    setPage(1);
-  };
-
-  return (
-    <>
-      <TopHeader />
-      <BottomHeader />
-
-      <section className="px-4 md:px-24 lg:px-28">
-        <div className="max-w-[1440px] mx-auto">
-          <Breadcrumbs
-            items={[
-              { label: "Home", href: "/" },
-              { label: "Categories", href: "/category" },
-              { label: selectedCategory || slug, href: `/category/${slug}` },
-            ]}
-          />
-        </div>
-      </section>
-
-      <Container className="mt-10">
-        <div className="grid grid-cols-[312px_1fr] gap-8">
-          {/* ===== ЛЕВАЯ КОЛОНКА ===== */}
-          <aside className="flex flex-col gap-6">
-            {/* Categories */}
-            <div>
-              <h2 className="text-gray-900 font-medium text-sm uppercase">Category</h2>
-              <div className="mt-4 flex flex-col gap-4">
-                {categories.map((cat) => {
-                  const isActive = selectedCategory === cat.name;
-                  return (
-                    <Link key={cat.id} href={`/category/${cat.slug}`} className="no-underline">
-                      <div className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                        <span
-                          className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                            isActive ? "border-2 border-[#FA8232]" : "border border-gray-200"
-                          }`}
-                        >
-                          {isActive && <span className="w-2 h-2 rounded-full bg-white" />}
-                        </span>
-                        <span className="text-gray-900">{cat.name}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            <hr className="border-gray-100 my-6" />
-
-            {/* Price Range */}
-            <div>
-              <h2 className="text-gray-900 font-medium text-sm uppercase">Price Range</h2>
-              <div className="mt-4">
-                <Range
-                  step={STEP}
-                  min={MIN}
-                  max={MAX}
-                  values={priceRange}
-                  onChange={(values) => {
-                    setPriceRange(values);
-                    setPage(1);
-                  }}
-                  renderTrack={({ props, children }) => {
-                    const { key, ...rest } = props as any;
-                    return (
-                      <div {...rest} className="h-3 w-full rounded bg-gray-100 relative">
-                        <div
-                          className="h-3 rounded bg-[#FA8232] absolute"
-                          style={{
-                            left: `${(priceRange[0] / MAX) * 100}%`,
-                            right: `${100 - (priceRange[1] / MAX) * 100}%`,
-                          }}
-                        />
-                        {children}
-                      </div>
-                    );
-                  }}
-                  renderThumb={({ props, index }) => {
-  return (
-    <div
-      {...props}
-      key={index} // <-- вот добавляем уникальный key для каждого thumb
-      className="w-5 h-5 rounded-full border-2 border-[#FA8232] bg-white shadow cursor-pointer flex items-center justify-center"
-    >
-      <div className="w-[8px] h-[8px] rounded-full bg-white" />
-    </div>
-  );
-}}
-                />
-
-                <div className="flex justify-between text-xs text-gray-500 mt-2">
-                  {Array.from({ length: 6 }, (_, i) => i * 2000).map((v) => (
-                    <span key={v}>${v}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Min / Max Price */}
-              <div className="mt-4 flex gap-4">
-                <input
-                  type="number"
-                  className="w-[150px] h-10 border border-gray-100 rounded-[3px] px-3 text-sm text-gray-700 outline-none"
-                  value={priceRange[0]}
-                  onChange={(e) => {
-                    const val = Math.max(MIN, Number(e.target.value) || 0);
-                    setPriceRange([Math.min(val, priceRange[1]), priceRange[1]]);
-                    setPage(1);
-                  }}
-                  placeholder="Min Price"
-                />
-                <input
-                  type="number"
-                  className="w-[150px] h-10 border border-gray-100 rounded-[3px] px-3 text-sm text-gray-700 outline-none"
-                  value={priceRange[1]}
-                  onChange={(e) => {
-                    let val = Number(e.target.value) || MAX;
-                    if (val > MAX) val = MAX;
-                    setPriceRange([priceRange[0], Math.max(val, priceRange[0])]);
-                    setPage(1);
-                  }}
-                  placeholder="Max Price"
-                />
-              </div>
-
-              {/* Радио диапазоны */}
-              <div className="mt-4 w-[312px] flex flex-col gap-2">
-                {[
-                  { label: "All Price", min: MIN, max: MAX },
-                  { label: "Under $20", min: 0, max: 20 },
-                  { label: "$25 to $100", min: 25, max: 100 },
-                  { label: "$100 to $300", min: 100, max: 300 },
-                  { label: "$300 to $500", min: 300, max: 500 },
-                  { label: "$500 to $1,000", min: 500, max: 1000 },
-                  { label: "$1,000 to $10,000", min: 1000, max: 10000 },
-                ].map((r, idx) => (
-                  <label
-                    key={idx}
-                    className="flex items-center gap-2 cursor-pointer text-sm text-gray-700"
-                  >
-                    <input
-                      type="radio"
-                      name="priceRangeRadio"
-                      className="peer hidden"
-                      checked={priceRange[0] === r.min && priceRange[1] === r.max}
-                      onChange={() => {
-                        setPriceRange([r.min, r.max]);
-                        setPage(1);
-                      }}
-                    />
-                    <span className="w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center peer-checked:border-2 peer-checked:border-[#FA8232]" />
-                    <span>{r.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <hr className="border-gray-100 my-6" />
-
-            {/* Brands */}
-            <div>
-              <h2 className="text-gray-900 font-medium text-sm uppercase">Popular Brands</h2>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                {brands.map((brand) => {
-                  const active = selectedBrands.includes(brand);
-                  return (
-                    <button
-                      key={brand}
-                      onClick={() => toggleBrand(brand)}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <span
-                        className={`w-5 h-5 flex items-center justify-center ${
-                          active
-                            ? "bg-[#FA8232] border-2 border-[#FA8232] text-white"
-                            : "bg-white border border-[#C9CFD2]"
-                        }`}
-                      >
-                        {active && (
-                          <svg
-                            width="10"
-                            height="7"
-                            viewBox="0 0 10 7"
-                            fill="none"
-                          >
-                            <path
-                              d="M1 3.5L3.5 6L9 1"
-                              stroke="white"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </span>
-                      <span className="text-gray-700">{brand}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <hr className="border-gray-100 my-6" />
-
-            {/* SVG-блок */}
-            <div className="border rounded p-8 flex flex-col items-center gap-6">
-              <Image src="/watch.svg" alt="watch" width={180} height={180} />
-              <Image src="/series.svg" alt="series" width={248} height={175} />
-              <div className="flex flex-col gap-3">
-                <Image src="/add.svg" alt="add" width={248} height={48} />
-                <Image src="/view.svg" alt="view" width={248} height={48} />
-              </div>
-            </div>
-          </aside>
-
-          {/* ===== ПРАВАЯ КОЛОНКА ===== */}
-          <main className="flex flex-col">
-            {/* Search */}
-            <div className="flex items-center border rounded px-4 py-2 w-[424px]">
-              <input
-                type="text"
-                placeholder="Search for anything..."
-                className="flex-1 text-sm text-gray-500 outline-none"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-              />
-              <span className="w-5 h-5 bg-gray-300 rounded" />
-            </div>
-
-            {/* Active Filters */}
-            <div className="mt-4 flex items-center justify-between bg-gray-50 px-6 py-3 rounded">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">Active Filters:</span>
-                {selectedCategory && (
-                  <div className="flex items-center gap-2 bg-white border rounded px-3 py-1 text-sm">
-                    <span className="text-gray-700">{selectedCategory}</span>
-                    <button onClick={clearCategory} className="text-gray-500 text-xs">
-                      ✕
-                    </button>
-                  </div>
-                )}
-                {selectedBrands.map((b) => (
-                  <div
-                    key={b}
-                    className="flex items-center gap-2 bg-white border rounded px-3 py-1 text-sm"
-                  >
-                    <span className="text-gray-700">{b}</span>
-                    <button
-                      onClick={() => removeBrand(b)}
-                      className="text-gray-500 text-xs"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="text-sm font-semibold text-gray-900">
-                {filtered.length} results
-              </div>
-            </div>
-
-            {/* Products Grid */}
-            <div className="mt-6 grid grid-cols-4 gap-4">
-              {paginated.length ? (
-                paginated.map((p) => <ProductCard key={p.id} product={p} />)
-              ) : (
-                <div className="col-span-4 text-center text-gray-500 py-12">
-                  No products found
-                </div>
-              )}
-            </div>
-
-            {/* Pagination */}
-            <div className="flex justify-center items-center gap-3 mt-10 mb-[72px]">
-              <button
-                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                className="w-10 h-10 flex items-center justify-center rounded-full border"
-                disabled={page === 1}
-              >
-                ‹
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-full border text-sm ${
-                    page === n
-                      ? "bg-[#FA8232] border-[#FA8232] text-white"
-                      : "border-gray-200 text-gray-400"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                className="w-10 h-10 flex items-center justify-center rounded-full border"
-                disabled={page === totalPages}
-              >
-                ›
-              </button>
-            </div>
-          </main>
-        </div>
-      </Container>
-
-      <Footer />
-    </>
-  );
-}

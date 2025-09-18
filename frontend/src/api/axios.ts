@@ -60,13 +60,12 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api", // все запросы будут начинаться с /api
+  baseURL: "http://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// 🔹 Перед каждым запросом подставляем токен
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token && config.headers) {
@@ -76,3 +75,5 @@ api.interceptors.request.use((config) => {
 });
 
 export default api;
+
+

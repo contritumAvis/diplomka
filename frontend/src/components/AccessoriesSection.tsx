@@ -76,7 +76,7 @@ export default function AccessoriesSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {featuredProducts[activeCategory].map((product) => (
             <div key={product.id} className="transform transition-transform hover:scale-105">
-              <ProductCard product={product} />
+              <ProductCard product={product as any} />
             </div>
           ))}
         </div>
